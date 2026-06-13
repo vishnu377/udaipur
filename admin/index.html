@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+  <title>Admin Panel — Kathi Roll Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/admin.css"/>
+  <style>
+    /* ── LOGIN GATE ──────────────────────────────────── */
+    .gate-overlay {
+      position: fixed; inset: 0; z-index: 1000;
+      background: #0f172a;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .gate-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 20px;
+      padding: 36px 28px;
+      width: 100%; max-width: 360px;
+      text-align: center;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+    }
+    .gate-logo {
+      width: 52px; height: 52px;
+      background: var(--yellow);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px; margin: 0 auto 16px;
+    }
+    .gate-title  { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+    .gate-sub    { font-size: 13px; color: #64748b; font-weight: 500; margin-bottom: 26px; }
+    .gate-label  { display: block; font-size: 12px; font-weight: 600; color: #94a3b8; text-align: left; margin-bottom: 7px; }
+    .gate-input  {
+      width: 100%; background: #0f172a; border: 1.5px solid #334155;
+      border-radius: 10px; color: #fff; font-family: var(--font);
+      font-size: 16px; padding: 13px 16px; outline: none;
+      letter-spacing: 3px; text-align: center; margin-bottom: 14px;
+      transition: border-color 0.15s;
+    }
+    .gate-input:focus { border-color: var(--blue); }
+    .gate-input::placeholder { letter-spacing: 0; color: #475569; font-size: 14px; }
+    .gate-btn {
+      width: 100%; background: var(--blue); color: #fff;
+      font-family: var(--font); font-size: 15px; font-weight: 700;
+      border: none; border-radius: 10px; padding: 14px;
+      cursor: pointer; transition: opacity 0.15s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .gate-btn:hover { opacity: 0.9; }
+    .gate-err {
+      font-size: 13px; font-weight: 600; color: var(--red);
+      background: #fee2e2; border-radius: 8px; padding: 9px 12px;
+      margin-top: 10px; display: none;
+    }
+    .gate-hint {
+      font-size: 11px; color: #475569; margin-top: 16px;
+      line-height: 1.6;
+    }
+
+    /* ── APP SHELL ─────────────────────────────────── */
+    .admin-app {
+      display: none; /* shown after login */
+    }
+    .admin-app.visible {
+      display: flex;
+      min-height: 100svh;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ LOGIN GATE ══════════════════════════════════════════ -->
+<div class="gate-overlay" id="gate">
+  <div class="gate-card">
+    <div class="gate-logo">🌯</div>
+    <div class="gate-title">Admin Panel</div>
+    <div class="gate-sub">Kathi Roll Hub — Owner Access</div>
+
+    <label class="gate-label" for="gate-pass">Password</label>
+    <input
+      class="gate-input" type="password" id="gate-pass"
+      placeholder="Enter password"
+      onkeydown="if(event.key==='Enter') doLogin()"
+      autocomplete="current-password"
+    />
+    <button class="gate-btn" onclick="doLogin()">
+      🔐 Login Karein
+    </button>
+    <div class="gate-err" id="gate-err">❌ Wrong password. Try again.</div>
+    <div class="gate-hint">
+      Default password: <strong style="color:#94a3b8">admin123</strong><br/>
+      Settings se change kar sakte ho.
+    </div>
+  </div>
+</div>
+
+<!-- ══ MAIN APP SHELL ══════════════════════════════════════ -->
+<div class="admin-app" id="app">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar" id="sidebar">
+
+    <!-- Brand -->
+    <div class="sb-brand">
+      <div class="sb-brand-icon">🌯</div>
+      <div class="sb-brand-text">
+        <div class="sb-brand-name">KATHI ROLL HUB</div>
+        <div class="sb-brand-sub" id="sb-location">Murlipura, Jaipur</div>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="sb-nav">
+
+      <div class="sb-section-title">Main</div>
+
+      <button class="nav-item active" id="nav-dashboard"
+        onclick="loadPage('dashboard','📊 Dashboard')">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">Dashboard</span>
+      </button>
+
+      <button class="nav-item" id="nav-billing"
+        onclick="loadPage('billing','🧾 Bills / Counter')">
+        <span class="nav-icon">🧾</span>
+        <span class="nav-label">Bills / Counter</span>
+      </button>
+
+      <div class="sb-section-title" style="margin-top:6px">Inventory</div>
+
+      <button class="nav-item" id="nav-menu"
+        onclick="loadPage('menu','🌯 Menu')">
+        <span class="nav-icon">🌯</span>
+        <span class="nav-label">Menu</span>
+      </button>
+
+      <button class="nav-item" id="nav-stock"
+        onclick="loadPage('stock','📦 Stock')">
+        <span class="nav-icon">📦</span>
+        <span class="nav-label">Stock</span>
+      </button>
+
+      <div class="sb-section-title" style="margin-top:6px">Customers</div>
+
+      <button class="nav-item" id="nav-customers"
+        onclick="loadPage('customers','👥 Customers')">
+        <span class="nav-icon">👥</span>
+        <span class="nav-label">Customers</span>
+      </button>
+
+      <button class="nav-item" id="nav-points"
+        onclick="loadPage('points','⭐ Points')">
+        <span class="nav-icon">⭐</span>
+        <span class="nav-label">Points</span>
+        <span class="nav-badge" id="badge-points" style="display:none">0</span>
+      </button>
+
+      <button class="nav-item" id="nav-referrals"
+        onclick="loadPage('referrals','🔗 Referrals')">
+        <span class="nav-icon">🔗</span>
+        <span class="nav-label">Referrals</span>
+      </button>
+
+      <div class="sb-section-title" style="margin-top:6px">Marketing</div>
+
+      <button class="nav-item" id="nav-rewards"
+        onclick="loadPage('rewards','🎁 Rewards / Offers')">
+        <span class="nav-icon">🎁</span>
+        <span class="nav-label">Rewards / Offers</span>
+      </button>
+
+      <button class="nav-item" id="nav-alerts"
+        onclick="loadPage('alerts','🚨 Alerts')">
+        <span class="nav-icon">🚨</span>
+        <span class="nav-label">Alerts</span>
+        <span class="nav-badge" id="badge-alerts" style="display:none">0</span>
+      </button>
+
+      <button class="nav-item" id="nav-feedback"
+        onclick="loadPage('feedback','💬 Help / Feedback')">
+        <span class="nav-icon">💬</span>
+        <span class="nav-label">Help / Feedback</span>
+        <span class="nav-badge" id="badge-feedback" style="display:none">0</span>
+      </button>
+
+      <div class="sb-section-title" style="margin-top:6px">System</div>
+
+      <button class="nav-item" id="nav-export"
+        onclick="loadPage('export','📥 Export')">
+        <span class="nav-icon">📥</span>
+        <span class="nav-label">Export</span>
+      </button>
+
+      <button class="nav-item" id="nav-settings"
+        onclick="loadPage('settings','⚙️ Settings')">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-label">Settings</span>
+      </button>
+
+    </nav>
+
+    <!-- User footer -->
+    <div class="sb-user">
+      <div class="sb-avatar">A</div>
+      <div class="sb-user-info">
+        <div class="sb-user-name">Admin</div>
+        <div class="sb-user-role" id="sb-role">Shop Owner</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Overlay for mobile -->
+  <div class="sb-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+
+  <!-- ── MAIN WRAPPER ── -->
+  <div class="main-wrapper" id="main-wrapper">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <!-- Hamburger (mobile) -->
+        <button class="btn-hamburger" onclick="toggleMobileSidebar()">☰</button>
+        <!-- Collapse (desktop) -->
+        <button class="btn-toggle-sb" onclick="toggleSidebar()" title="Toggle sidebar">⬅</button>
+        <span class="topbar-title" id="topbar-title">📊 Dashboard</span>
+      </div>
+
+      <div class="topbar-right">
+        <span class="tb-shop-tag" id="tb-date"></span>
+        <div class="live-dot" title="Live"></div>
+        <button class="btn-counter-top" onclick="openCounter()">⚡ Counter</button>
+        <button class="btn-logout-top"  onclick="doLogout()">Logout</button>
+      </div>
+    </header>
+
+    <!-- Content iframe -->
+    <div class="content-area">
+      <iframe
+        class="content-frame"
+        id="content-frame"
+        src="pages/dashboard.html"
+        title="Admin Content"
+      ></iframe>
+    </div>
+
+  </div><!-- /main-wrapper -->
+
+</div><!-- /admin-app -->
+
+<!-- ══ COUNTER MODAL ════════════════════════════════════════ -->
+<div class="modal-overlay" id="counter-modal" onclick="if(event.target===this)closeCounter()">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title">⚡ Counter — Fast Bill</div>
+
+    <!-- Mobile search -->
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <input class="inp" type="tel" id="ct-mob" maxlength="10"
+        placeholder="Customer mobile number..." inputmode="numeric"
+        onkeydown="if(event.key==='Enter')ctLookup()"/>
+      <button class="btn btn-yellow" onclick="ctLookup()" style="white-space:nowrap">
+        🔍 Find
+      </button>
+    </div>
+
+    <!-- Result -->
+    <div id="ct-result" style="display:none">
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);padding:14px;margin-bottom:12px">
+        <div style="font-size:16px;font-weight:700;color:var(--txt)" id="ct-name"></div>
+        <div style="font-size:13px;color:var(--txt2);margin-top:3px" id="ct-sub"></div>
+      </div>
+
+      <div id="ct-offers" style="margin-bottom:12px"></div>
+
+      <div class="row2" style="margin-bottom:12px">
+        <div class="field">
+          <label class="lbl">Bill Amount ₹</label>
+          <input class="inp" type="number" id="ct-amt" placeholder="0" oninput="ctCalc()"/>
+        </div>
+        <div class="field">
+          <label class="lbl">Final Amount ₹</label>
+          <input class="inp" type="number" id="ct-final" placeholder="0" readonly style="opacity:.7"/>
+        </div>
+      </div>
+
+      <div class="field" style="margin-bottom:12px">
+        <label class="lbl">Payment</label>
+        <div class="pay-btns">
+          <button class="pay-btn on" onclick="ctSelPay(this,'cash')">💵 Cash</button>
+          <button class="pay-btn"    onclick="ctSelPay(this,'upi')">📲 UPI</button>
+          <button class="pay-btn"    onclick="ctSelPay(this,'card')">💳 Card</button>
+        </div>
+      </div>
+
+      <div style="background:var(--yellow);border-radius:var(--r-md);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span style="font-size:13px;font-weight:700;color:#000">Discount: ₹<span id="ct-disc">0</span></span>
+        <span style="font-size:22px;font-weight:800;color:#000">₹<span id="ct-final-show">0</span></span>
+      </div>
+
+      <button class="btn btn-success btn-full" onclick="ctConfirm()" style="margin-bottom:8px">
+        ✅ Confirm Bill + Mark Visit
+      </button>
+      <button class="btn btn-ghost btn-full" onclick="ctReceipt()" style="color:var(--green);border-color:var(--green)">
+        📲 WhatsApp Receipt
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+  import { LS } from '../shared/constants.js';
+
+  // ═══════════════════════════════════════════════════════
+  //  AUTH
+  // ═══════════════════════════════════════════════════════
+  const PASS_KEY = 'krh_admin_pass';
+
+  function getPass() {
+    return localStorage.getItem(PASS_KEY) || 'admin123';
+  }
+
+  window.doLogin = function() {
+    const v     = document.getElementById('gate-pass').value;
+    const errEl = document.getElementById('gate-err');
+    errEl.style.display = 'none';
+
+    if (v === getPass()) {
+      document.getElementById('gate').style.display = 'none';
+      document.getElementById('app').classList.add('visible');
+      initApp();
+    } else {
+      errEl.style.display = 'block';
+      document.getElementById('gate-pass').select();
+    }
+  };
+
+  document.getElementById('gate-pass').addEventListener('keydown', e => {
+    if (e.key === 'Enter') window.doLogin();
+  });
+
+  window.doLogout = function() {
+    document.getElementById('app').classList.remove('visible');
+    document.getElementById('gate').style.display = 'flex';
+    document.getElementById('gate-pass').value = '';
+  };
+
+  // ═══════════════════════════════════════════════════════
+  //  INIT
+  // ═══════════════════════════════════════════════════════
+  function initApp() {
+    // Date in topbar
+    document.getElementById('tb-date').textContent =
+      new Date().toLocaleDateString('en-IN',{ weekday:'short', day:'numeric', month:'short' });
+
+    // Shop name from settings
+    const sh = JSON.parse(localStorage.getItem(LS.shop) || '{}');
+    if (sh.loc)  document.getElementById('sb-location').textContent = sh.loc;
+
+    // Badges
+    updateBadges();
+    setInterval(updateBadges, 8000);
+  }
+
+  function updateBadges() {
+    const users = JSON.parse(localStorage.getItem(LS.users) || '[]');
+    const fb    = JSON.parse(localStorage.getItem('krh_feedback') || '[]');
+
+    // Points pending
+    let pending = 0;
+    users.forEach(u => {
+      const p = u.socialPending || {}, d = u.socialDone || {};
+      pending += Object.keys(p).filter(k => p[k] && !d[k]).length;
+    });
+    setBadge('badge-points',   pending);
+
+    // Feedback unread
+    setBadge('badge-feedback', fb.length);
+
+    // Alerts (bday + inactive)
+    const today = new Date();
+    const bdays = users.filter(u => {
+      if (!u.dob) return false;
+      const d = new Date(u.dob);
+      const n = new Date(today.getFullYear(), d.getMonth(), d.getDate());
+      if (n < today) n.setFullYear(today.getFullYear() + 1);
+      return Math.ceil((n - today) / 864e5) <= 7;
+    }).length;
+    setBadge('badge-alerts', bdays);
+  }
+
+  function setBadge(id, count) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.display = count > 0 ? 'block' : 'none';
+    el.textContent   = count;
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  SIDEBAR
+  // ═══════════════════════════════════════════════════════
+  let sidebarCollapsed = false;
+
+  window.toggleSidebar = function() {
+    sidebarCollapsed = !sidebarCollapsed;
+    document.getElementById('sidebar').classList.toggle('collapsed', sidebarCollapsed);
+    const btn = document.querySelector('.btn-toggle-sb');
+    btn.textContent = sidebarCollapsed ? '➡' : '⬅';
+  };
+
+  window.toggleMobileSidebar = function() {
+    document.getElementById('sidebar').classList.toggle('mobile-open');
+    document.getElementById('sb-overlay').classList.toggle('show');
+  };
+
+  window.closeSidebar = function() {
+    document.getElementById('sidebar').classList.remove('mobile-open');
+    document.getElementById('sb-overlay').classList.remove('show');
+  };
+
+  // ═══════════════════════════════════════════════════════
+  //  PAGE ROUTING
+  // ═══════════════════════════════════════════════════════
+  window.loadPage = function(name, title) {
+    // Update iframe
+    document.getElementById('content-frame').src = `pages/${name}.html`;
+
+    // Update topbar title
+    document.getElementById('topbar-title').textContent = title || name;
+
+    // Update active nav
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    const navEl = document.getElementById('nav-' + name);
+    if (navEl) navEl.classList.add('active');
+
+    // Close mobile sidebar
+    closeSidebar();
+  };
+
+  // ═══════════════════════════════════════════════════════
+  //  COUNTER MODAL (quick billing)
+  // ═══════════════════════════════════════════════════════
+  let ctUser = null, ctPay = 'cash', ctDiscPct = 0;
+
+  window.openCounter = function() {
+    document.getElementById('counter-modal').classList.add('open');
+    setTimeout(() => document.getElementById('ct-mob').focus(), 100);
+  };
+
+  window.closeCounter = function() {
+    document.getElementById('counter-modal').classList.remove('open');
+    document.getElementById('ct-mob').value = '';
+    document.getElementById('ct-result').style.display = 'none';
+    document.getElementById('ct-amt').value   = '';
+    document.getElementById('ct-final').value = '';
+    document.getElementById('ct-disc').textContent      = '0';
+    document.getElementById('ct-final-show').textContent= '0';
+    ctUser = null; ctDiscPct = 0; ctPay = 'cash';
+  };
+
+  window.ctLookup = function() {
+    const mob  = document.getElementById('ct-mob').value.trim();
+    if (mob.length !== 10) { alert('10-digit mobile dalein'); return; }
+    const users = JSON.parse(localStorage.getItem(LS.users) || '[]');
+    ctUser = users.find(u => u.mobile === mob);
+    if (!ctUser) {
+      document.getElementById('ct-result').style.display = 'none';
+      alert('Customer nahi mila. Pehle register karwao.');
+      return;
+    }
+
+    const s       = JSON.parse(localStorage.getItem(LS.settings) || '{}');
+    const discPct = s.defaultWelcomeDisc || 10;
+    const code    = 'ROLL' + mob.slice(-4).toUpperCase();
+
+    document.getElementById('ct-name').textContent = ctUser.name;
+    document.getElementById('ct-sub').textContent  =
+      `${ctUser.visits||0} visits · ${ctUser.points||0} pts · ${code}`;
+
+    // Offers
+    const offers = [{ id:'welcome', label:`${discPct}% Welcome OFF`, pct: discPct }];
+    const today  = new Date();
+    const dob    = ctUser.dob ? new Date(ctUser.dob) : null;
+    if (dob && dob.getDate()===today.getDate() && dob.getMonth()===today.getMonth()) {
+      offers.push({ id:'bday', label:'🎂 Birthday 15% OFF', pct: 15 });
+    }
+    const vGoal = s.defaultVisitThreshold || 5;
+    if ((ctUser.visits||0) % vGoal === 0 && (ctUser.visits||0) > 0) {
+      offers.push({ id:'visit', label:'🔥 Visit Milestone', pct: 0 });
+    }
+
+    document.getElementById('ct-offers').innerHTML =
+      offers.map(o => `
+        <div class="offer-item" data-pct="${o.pct}" onclick="ctSelOffer(this,${o.pct})"
+          style="background:var(--inp-bg);border:1.5px solid var(--inp-br);border-radius:var(--r-sm);
+          padding:10px 14px;display:flex;justify-content:space-between;
+          cursor:pointer;margin-bottom:7px;transition:border-color .15s">
+          <span style="font-size:13px;font-weight:600;color:var(--txt)">${o.label}</span>
+          <span style="font-size:13px;font-weight:700;color:var(--green)">${o.pct>0 ? o.pct+'% OFF' : '✓'}</span>
+        </div>`).join('');
+
+    document.getElementById('ct-result').style.display = 'block';
+  };
+
+  window.ctSelOffer = function(el, pct) {
+    document.querySelectorAll('.offer-item').forEach(i => {
+      i.style.borderColor = 'var(--inp-br)';
+      i.style.background  = 'var(--inp-bg)';
+    });
+    el.style.borderColor = 'var(--green)';
+    el.style.background  = '#f0fdf4';
+    ctDiscPct = pct;
+    ctCalc();
+  };
+
+  window.ctCalc = function() {
+    const amt  = parseFloat(document.getElementById('ct-amt').value) || 0;
+    const disc = Math.round(amt * ctDiscPct / 100);
+    const final= amt - disc;
+    document.getElementById('ct-final').value        = final;
+    document.getElementById('ct-disc').textContent   = disc;
+    document.getElementById('ct-final-show').textContent = final;
+  };
+
+  window.ctSelPay = function(el, method) {
+    document.querySelectorAll('.pay-btn').forEach(b => b.classList.remove('on'));
+    el.classList.add('on');
+    ctPay = method;
+  };
+
+  window.ctConfirm = function() {
+    if (!ctUser) return;
+    const amt   = parseFloat(document.getElementById('ct-amt').value)   || 0;
+    const final = parseFloat(document.getElementById('ct-final').value) || amt;
+    const disc  = amt - final;
+
+    const users = JSON.parse(localStorage.getItem(LS.users) || '[]');
+    const idx   = users.findIndex(u => u.mobile === ctUser.mobile);
+    if (idx === -1) return;
+
+    users[idx].visits = (users[idx].visits || 0) + 1;
+    users[idx].points = (users[idx].points || 0) + 5;
+    users[idx].saved  = (users[idx].saved  || 0) + disc;
+    localStorage.setItem(LS.users, JSON.stringify(users));
+
+    const bills = JSON.parse(localStorage.getItem(LS.bills) || '[]');
+    bills.unshift({
+      mobile: ctUser.mobile, name: ctUser.name,
+      amt, final, discount: disc,
+      offer: ctDiscPct > 0 ? 'welcome' : 'none',
+      payment: ctPay, time: new Date().toISOString()
+    });
+    localStorage.setItem(LS.bills, JSON.stringify(bills));
+
+    const s    = JSON.parse(localStorage.getItem(LS.settings) || '{}');
+    const goal = s.defaultVisitThreshold || 5;
+    const v    = users[idx].visits;
+    const rew  = s.defaultVisitReward || 'FREE item';
+    alert(v % goal === 0
+      ? `🎉 Visit ${v} — ${users[idx].name} ko ${rew} milega!`
+      : `✅ Bill done! Visit #${v} · +5 pts`
+    );
+
+    closeCounter();
+    // Refresh current page if billing page is open
+    const frame = document.getElementById('content-frame');
+    if (frame.src.includes('billing') || frame.src.includes('dashboard')) {
+      frame.contentWindow?.location.reload();
+    }
+    updateBadges();
+  };
+
+  window.ctReceipt = function() {
+    if (!ctUser) return;
+    const amt   = parseFloat(document.getElementById('ct-amt').value)   || 0;
+    const final = parseFloat(document.getElementById('ct-final').value) || amt;
+    const disc  = amt - final;
+    const sh    = JSON.parse(localStorage.getItem(LS.shop) || '{}');
+    const msg   = encodeURIComponent(
+      `🧾 *${sh.name || 'Kathi Roll Hub'} — Bill Receipt*\n` +
+      `────────────────\n` +
+      `👤 ${ctUser.name}\n📱 ${ctUser.mobile}\n` +
+      `────────────────\n` +
+      `💰 Amount: ₹${amt}\n${disc>0?`🎁 Discount: -₹${disc}\n`:''}` +
+      `✅ *Final: ₹${final}*\n💳 ${ctPay.toUpperCase()}\n` +
+      `────────────────\n` +
+      `⭐ Points: ${(ctUser.points||0)+5}\n` +
+      `Dhanyawaad! Dobara aana 🙏`
+    );
+    window.open(`https://wa.me/${ctUser.mobile}?text=${msg}`, '_blank');
+  };
+</script>
+</body>
+</html>
