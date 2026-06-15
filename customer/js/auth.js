@@ -1,6 +1,3 @@
-
-
-
 // ============================================================
 //  customer/js/auth.js  —  Firebase-FIRST version
 //  registerUser → Firestore setDoc
@@ -56,7 +53,7 @@ export async function registerUser(userData) {
   const user = {
     ...userData,
     mobile,
-    points:      DEFAULTS.welcomePts   || 200,
+    points:      200,
     visits:      0,
     saved:       0,
     referrals:   0,
@@ -66,34 +63,23 @@ export async function registerUser(userData) {
     dashVisited: false,
   };
 
-  try {
-    // ── 3. Save to Firestore ─────────────────────────────
-    if (FIREBASE_READY) {
+  // ── 3. ALWAYS save to LocalStorage first (guaranteed) ───
+  const users = _lsGetUsers();
+  users.push(user);
+  _lsSetUsers(users);
+  localStorage.setItem(LS.current, mobile);
+
+  // ── 4. Also save to Firestore (best effort) ───────────
+  if (FIREBASE_READY) {
+    try {
       await setDocFn(docFn(db, COLLECTIONS.users, mobile), user);
+    } catch (err) {
+      console.warn('[registerUser] Firestore save failed (LS saved):', err.message);
+      // Not a fatal error — LS is already saved
     }
-
-    // ── 4. Cache to LocalStorage ─────────────────────────
-    const users = _lsGetUsers();
-    users.push(user);
-    _lsSetUsers(users);
-
-    // ── 5. Set session ───────────────────────────────────
-    localStorage.setItem(LS.current, mobile);
-
-    return { success: true, user };
-
-  } catch (err) {
-    console.error('[registerUser] Error:', err);
-
-    // If Firestore failed but LS succeeded, still allow login
-    const lsUsers = _lsGetUsers();
-    if (lsUsers.find(u => u.mobile === mobile)) {
-      localStorage.setItem(LS.current, mobile);
-      return { success: true, user, offlineMode: true };
-    }
-
-    return { success: false, message: 'Save nahi hua. Dobara try karo.' };
   }
+
+  return { success: true, user };
 }
 
 // ============================================================
@@ -297,3 +283,4 @@ function _syncUserToLS(user) {
   else users.push(user);
   _lsSetUsers(users);
 }
+

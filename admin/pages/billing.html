@@ -1,983 +1,741 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="hi">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="../css/admin.css"/>
-  <style>
-    /* ── LAYOUT ── */
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: var(--bg); font-family: 'Inter', sans-serif;
-      height: 100svh; overflow: hidden; display: flex; flex-direction: column;
-    }
-
-    /* Top customer search bar */
-    .top-bar {
-      background: var(--card); border-bottom: 1px solid var(--border);
-      padding: 12px 16px; display: flex; align-items: center;
-      gap: 10px; flex-shrink: 0; flex-wrap: wrap;
-    }
-    .mob-search {
-      display: flex; align-items: center; gap: 8px;
-      background: var(--bg); border: 1.5px solid var(--border);
-      border-radius: var(--r-md); padding: 9px 14px; flex: 1; min-width: 200px;
-    }
-    .mob-inp {
-      background: none; border: none; outline: none;
-      font-family: 'Inter', sans-serif; font-size: 15px;
-      color: var(--txt); font-weight: 600; width: 100%;
-    }
-    .mob-inp::placeholder { color: var(--txt3); font-weight: 400; }
-
-    /* Customer info pill */
-    .cust-pill {
-      display: none; align-items: center; gap: 10px;
-      background: #f0fdf4; border: 1.5px solid var(--green);
-      border-radius: var(--r-md); padding: 8px 14px;
-    }
-    .cust-pill.show { display: flex; }
-    .cp-avatar {
-      width: 32px; height: 32px; border-radius: 50%;
-      background: var(--green); color: #fff;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 14px; font-weight: 800; flex-shrink: 0;
-    }
-    .cp-name { font-size: 14px; font-weight: 800; color: #166534; }
-    .cp-sub  { font-size: 11px; color: #16a34a; font-weight: 600; }
-    .cp-clear {
-      background: none; border: none; cursor: pointer;
-      color: #16a34a; font-size: 16px; padding: 0 2px;
-    }
-
-    /* Guest indicator */
-    .guest-pill {
-      display: none; align-items: center; gap: 8px;
-      background: var(--bg); border: 1.5px solid var(--border);
-      border-radius: var(--r-md); padding: 8px 14px;
-    }
-    .guest-pill.show { display: flex; }
-    .gp-lbl { font-size: 13px; font-weight: 600; color: var(--txt2); }
-
-    /* ── POS BODY — 2 column ── */
-    .pos-body {
-      display: grid; grid-template-columns: 1fr 340px;
-      flex: 1; overflow: hidden; gap: 0;
-    }
-    @media(max-width: 768px) {
-      body { overflow: auto; }
-      .pos-body { grid-template-columns: 1fr; height: auto; }
-    }
-
-    /* ── LEFT: MENU PANEL ── */
-    .menu-panel {
-      padding: 14px; overflow-y: auto; background: var(--bg);
-      scrollbar-width: thin;
-    }
-
-    /* Category tab bar */
-    .cat-tabs {
-      display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px;
-    }
-    .cat-tab {
-      padding: 6px 14px; border-radius: 99px;
-      border: 1.5px solid var(--border); background: var(--card);
-      font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 700;
-      color: var(--txt2); cursor: pointer; transition: all .15s;
-      white-space: nowrap;
-    }
-    .cat-tab.on {
-      background: var(--yellow); border-color: var(--yellow);
-      color: #000;
-    }
-
-    /* Menu search */
-    .menu-search {
-      display: flex; align-items: center; gap: 8px;
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: var(--r-sm); padding: 8px 12px;
-      margin-bottom: 14px;
-    }
-    .menu-search-inp {
-      background: none; border: none; outline: none;
-      font-family: 'Inter', sans-serif; font-size: 13px;
-      color: var(--txt); width: 100%;
-    }
-
-    /* Menu items grid */
-    .menu-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-      gap: 10px;
-    }
-
-    .menu-card {
-      background: var(--card); border: 1.5px solid var(--border);
-      border-radius: var(--r-lg); padding: 14px 10px 12px;
-      display: flex; flex-direction: column; align-items: center;
-      gap: 7px; cursor: pointer; transition: all .15s;
-      position: relative; overflow: hidden; user-select: none;
-    }
-    .menu-card:hover   { border-color: var(--yellow); box-shadow: var(--shadow-md); transform: translateY(-1px); }
-    .menu-card:active  { transform: scale(.97); }
-    .menu-card.out-of-stock { opacity: .45; pointer-events: none; }
-
-    .mc-emoji  { font-size: 32px; line-height: 1; }
-    .mc-name   { font-size: 12px; font-weight: 700; color: var(--txt); text-align: center; line-height: 1.3; }
-    .mc-price  { font-size: 14px; font-weight: 800; color: var(--txt); }
-    .mc-disc   {
-      font-size: 10px; font-weight: 700; color: #fff;
-      background: var(--red); padding: 2px 7px; border-radius: 99px;
-    }
-    .mc-type {
-      position: absolute; top: 6px; right: 6px;
-      width: 10px; height: 10px; border-radius: 50%;
-    }
-    .mc-type.veg     { background: var(--green); }
-    .mc-type.non-veg { background: var(--red); }
-    .mc-oos-badge {
-      position: absolute; bottom: 0; left: 0; right: 0;
-      background: rgba(0,0,0,.6); color: #fff;
-      font-size: 10px; font-weight: 700; text-align: center;
-      padding: 3px;
-    }
-
-    /* Flash animation when item added */
-    @keyframes flash-add {
-      0%   { background: #fef9c3; }
-      100% { background: var(--card); }
-    }
-    .menu-card.added { animation: flash-add .35s ease; }
-
-    /* ── RIGHT: CART PANEL ── */
-    .cart-panel {
-      background: var(--card); border-left: 1px solid var(--border);
-      display: flex; flex-direction: column; overflow: hidden;
-    }
-
-    .cart-header {
-      padding: 14px 16px; border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
-      flex-shrink: 0;
-    }
-    .cart-title { font-size: 15px; font-weight: 800; color: var(--txt); }
-    .cart-clear {
-      font-size: 12px; font-weight: 700; color: var(--red);
-      background: none; border: none; cursor: pointer;
-      font-family: 'Inter', sans-serif;
-    }
-
-    /* Cart items list */
-    .cart-items {
-      flex: 1; overflow-y: auto; padding: 10px 14px;
-      scrollbar-width: thin;
-    }
-    .cart-empty {
-      display: flex; flex-direction: column; align-items: center;
-      justify-content: center; height: 100%; color: var(--txt3);
-      gap: 10px; text-align: center;
-    }
-    .cart-empty-icon { font-size: 40px; }
-    .cart-empty-txt  { font-size: 13px; font-weight: 600; }
-
-    /* Cart item row */
-    .cart-item {
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 0; border-bottom: 1px solid var(--border);
-    }
-    .cart-item:last-child { border-bottom: none; }
-    .ci-emoji { font-size: 22px; flex-shrink: 0; }
-    .ci-info  { flex: 1; min-width: 0; }
-    .ci-name  { font-size: 13px; font-weight: 700; color: var(--txt); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .ci-price { font-size: 12px; color: var(--txt3); font-weight: 600; margin-top: 2px; }
-    .ci-total { font-size: 14px; font-weight: 800; color: var(--txt); flex-shrink: 0; min-width: 52px; text-align: right; }
-
-    /* Qty control */
-    .qty-ctrl { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
-    .qc-btn {
-      width: 26px; height: 26px; border-radius: 50%;
-      border: 1.5px solid var(--border); background: var(--bg);
-      font-size: 15px; font-weight: 700; color: var(--txt2);
-      cursor: pointer; display: flex; align-items: center;
-      justify-content: center; transition: all .12s; line-height: 1;
-    }
-    .qc-btn:hover { border-color: var(--txt); color: var(--txt); }
-    .qc-val {
-      font-size: 14px; font-weight: 800; color: var(--txt);
-      min-width: 20px; text-align: center;
-    }
-
-    /* Coupon section */
-    .coupon-section {
-      border-top: 1px solid var(--border); padding: 10px 14px; flex-shrink: 0;
-    }
-    .coupon-lbl { font-size: 11px; font-weight: 700; color: var(--txt3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; }
-    .coupon-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-    .coupon-chip {
-      display: inline-flex; align-items: center; gap: 5px;
-      border: 1.5px solid var(--border); border-radius: 99px;
-      padding: 5px 12px; font-size: 12px; font-weight: 700;
-      color: var(--txt2); background: var(--bg); cursor: pointer;
-      transition: all .15s;
-    }
-    .coupon-chip:hover { border-color: var(--yellow); color: var(--txt); }
-    .coupon-chip.applied { background: #fef9c3; border-color: var(--yellow); color: #92400e; }
-    .coupon-none { font-size: 12px; color: var(--txt3); font-weight: 600; }
-
-    /* Bill summary */
-    .bill-summary {
-      border-top: 1px solid var(--border);
-      padding: 12px 14px; flex-shrink: 0;
-    }
-    .bs-row {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 4px 0; font-size: 13px;
-    }
-    .bs-lbl   { color: var(--txt2); font-weight: 600; }
-    .bs-val   { color: var(--txt);  font-weight: 700; }
-    .bs-val.r { color: var(--red);  }
-    .bs-val.g { color: var(--green);}
-    .bs-total {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-top: 8px; padding: 12px 14px;
-      background: var(--yellow); border-radius: var(--r-md);
-    }
-    .bs-total-lbl { font-size: 14px; font-weight: 800; color: #000; }
-    .bs-total-val { font-size: 22px; font-weight: 800; color: #000; }
-
-    /* Payment buttons */
-    .payment-section { padding: 10px 14px 8px; flex-shrink: 0; }
-    .payment-lbl { font-size: 11px; font-weight: 700; color: var(--txt3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; }
-    .pay-btns { display: flex; gap: 6px; }
-    .pay-btn {
-      flex: 1; padding: 10px 6px;
-      border: 2px solid var(--border); border-radius: var(--r-md);
-      background: var(--bg); font-family: 'Inter', sans-serif;
-      font-size: 12px; font-weight: 800; color: var(--txt2);
-      cursor: pointer; transition: all .15s; text-align: center;
-      display: flex; flex-direction: column; align-items: center; gap: 4px;
-    }
-    .pay-btn .pb-icon { font-size: 18px; }
-    .pay-btn:hover { border-color: var(--yellow); }
-    .pay-btn.on    { border-color: var(--yellow); background: #fef9c3; color: #92400e; }
-
-    /* Generate bill button */
-    .gen-btn {
-      margin: 4px 14px 14px;
-      width: calc(100% - 28px);
-      background: var(--green); color: #fff;
-      font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 800;
-      border: none; border-radius: var(--r-md); padding: 14px;
-      cursor: pointer; transition: opacity .15s, transform .12s;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      flex-shrink: 0;
-    }
-    .gen-btn:hover   { opacity: .9; }
-    .gen-btn:active  { transform: scale(.98); }
-    .gen-btn:disabled{ opacity: .5; pointer-events: none; }
-
-    /* ── RECEIPT MODAL ── */
-    .modal-bg {
-      position: fixed; inset: 0; background: rgba(0,0,0,.5);
-      z-index: 500; display: none;
-      align-items: center; justify-content: center; padding: 16px;
-    }
-    .modal-bg.open { display: flex; }
-
-    .receipt-box {
-      background: #fff; border-radius: 16px;
-      width: 100%; max-width: 380px;
-      max-height: 90svh; overflow-y: auto;
-      box-shadow: 0 20px 60px rgba(0,0,0,.3);
-      animation: pop-in .22s ease;
-    }
-    @keyframes pop-in { from{transform:scale(.94);opacity:0} to{transform:scale(1);opacity:1} }
-
-    /* Thermal receipt styles */
-    .receipt {
-      padding: 20px; font-family: 'JetBrains Mono', monospace;
-      font-size: 12px; color: #000; line-height: 1.8;
-    }
-    .receipt-logo   { text-align: center; font-size: 18px; font-weight: 700; margin-bottom: 4px; }
-    .receipt-sub    { text-align: center; font-size: 11px; color: #555; margin-bottom: 2px; }
-    .receipt-date   { text-align: center; font-size: 11px; color: #888; margin-bottom: 12px; }
-    .receipt-div    { border-top: 1.5px dashed #ccc; margin: 8px 0; }
-    .receipt-row    { display: flex; justify-content: space-between; }
-    .receipt-row.bold { font-weight: 700; }
-    .receipt-total  { display: flex; justify-content: space-between; font-size: 15px; font-weight: 800; margin: 6px 0; }
-    .receipt-thanks { text-align: center; font-size: 11px; color: #555; margin-top: 12px; line-height: 1.6; }
-    .receipt-code   { text-align: center; font-size: 20px; font-weight: 700; letter-spacing: 3px; margin: 8px 0; background: #f5f5f5; padding: 6px; border-radius: 6px; }
-
-    /* Receipt action buttons */
-    .receipt-actions {
-      display: flex; gap: 10px; padding: 14px 20px 20px;
-      border-top: 1px solid #f0f0f0;
-    }
-    .ra-btn {
-      flex: 1; padding: 12px; border-radius: 10px;
-      font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 800;
-      cursor: pointer; border: none; transition: opacity .15s;
-      display: flex; align-items: center; justify-content: center; gap: 6px;
-    }
-    .ra-print { background: #1a1a1a; color: #fff; }
-    .ra-wa    { background: #25d366; color: #fff; }
-    .ra-new   { background: var(--yellow); color: #000; }
-
-    /* ── Not registered warning ── */
-    .not-found-bar {
-      display: none; background: #fff7ed; border: 1.5px solid #fed7aa;
-      border-radius: var(--r-sm); padding: 8px 12px;
-      font-size: 12px; font-weight: 700; color: #9a3412;
-      align-items: center; gap: 8px;
-    }
-    .not-found-bar.show { display: flex; }
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="../css/admin.css"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);font-family:'Inter',sans-serif;height:100svh;overflow:hidden;display:flex;flex-direction:column}
+.top-bar{background:var(--card);border-bottom:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap}
+.mob-wrap{display:flex;align-items:center;gap:8px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r-md);padding:9px 14px;flex:1;min-width:180px}
+.mob-inp{background:none;border:none;outline:none;font-family:'Inter',sans-serif;font-size:15px;color:var(--txt);font-weight:600;width:100%}
+.mob-inp::placeholder{color:var(--txt3);font-weight:400}
+.cpill{display:none;align-items:center;gap:10px;background:#f0fdf4;border:1.5px solid var(--green);border-radius:var(--r-md);padding:8px 14px}
+.cpill.show{display:flex}
+.cp-ava{width:32px;height:32px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0}
+.cp-nm{font-size:14px;font-weight:800;color:#166534}
+.cp-sb{font-size:11px;color:#16a34a;font-weight:600}
+.cp-x{background:none;border:none;cursor:pointer;color:#16a34a;font-size:16px;padding:0 2px}
+.notfound{display:none;background:#fff7ed;border:1.5px solid #fed7aa;border-radius:var(--r-sm);padding:8px 12px;font-size:12px;font-weight:700;color:#9a3412;align-items:center;gap:8px}
+.notfound.show{display:flex}
+.pos{display:grid;grid-template-columns:1fr 330px;flex:1;overflow:hidden}
+@media(max-width:720px){body{overflow:auto}.pos{grid-template-columns:1fr;height:auto}}
+.menu-panel{padding:12px;overflow-y:auto;background:var(--bg);scrollbar-width:thin}
+.cat-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.cat-tab{padding:6px 14px;border-radius:99px;border:1.5px solid var(--border);background:var(--card);font-family:'Inter',sans-serif;font-size:12px;font-weight:700;color:var(--txt2);cursor:pointer;transition:all .15s;white-space:nowrap}
+.cat-tab.on{background:var(--yellow);border-color:var(--yellow);color:#000}
+.msearch{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 12px;margin-bottom:12px}
+.msearch input{background:none;border:none;outline:none;font-family:'Inter',sans-serif;font-size:13px;color:var(--txt);width:100%}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:9px}
+.mcard{background:var(--card);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:12px 8px 10px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;transition:all .15s;position:relative;overflow:hidden;user-select:none}
+.mcard:hover{border-color:var(--yellow);box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.mcard:active{transform:scale(.97)}
+.mcard.oos{opacity:.4;pointer-events:none}
+.mc-dot{position:absolute;top:6px;right:6px;width:9px;height:9px;border-radius:50%}
+.mc-dot.veg{background:var(--green)}.mc-dot.nv{background:var(--red)}
+@keyframes flash{0%{background:#fef9c3}100%{background:var(--card)}}
+.mcard.flash{animation:flash .3s ease}
+.cart-panel{background:var(--card);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.cart-hdr{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.cart-items{flex:1;overflow-y:auto;padding:8px 12px;scrollbar-width:thin}
+.cart-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--txt3);gap:8px;text-align:center}
+.ci{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--border)}
+.ci:last-child{border-bottom:none}
+.ci-inf{flex:1;min-width:0}
+.ci-nm{font-size:13px;font-weight:700;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ci-pr{font-size:11px;color:var(--txt3);font-weight:600;margin-top:1px}
+.ci-tot{font-size:13px;font-weight:800;color:var(--txt);flex-shrink:0;min-width:46px;text-align:right}
+.qctrl{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.qcb{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);font-size:14px;font-weight:700;color:var(--txt2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s}
+.qcb:hover{border-color:var(--txt);color:var(--txt)}
+.qcv{font-size:13px;font-weight:800;color:var(--txt);min-width:18px;text-align:center}
+.coupon-sec{border-top:1px solid var(--border);padding:9px 12px;flex-shrink:0;display:none}
+.coupon-lbl{font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px}
+.chip{display:inline-flex;align-items:center;gap:4px;border:1.5px solid var(--border);border-radius:99px;padding:4px 10px;font-size:11px;font-weight:700;color:var(--txt2);background:var(--bg);cursor:pointer;transition:all .15s;margin:2px}
+.chip.on{background:#fef9c3;border-color:var(--yellow);color:#92400e}
+.bill-sum{border-top:1px solid var(--border);padding:10px 12px;flex-shrink:0}
+.bsr{display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-size:12px}
+.bsr-l{color:var(--txt2);font-weight:600}.bsr-v{color:var(--txt);font-weight:700}
+.bsr-v.r{color:var(--red)}
+.bs-tot{display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding:11px 12px;background:var(--yellow);border-radius:var(--r-md)}
+.bst-l{font-size:13px;font-weight:800;color:#000}
+.bst-v{font-size:20px;font-weight:800;color:#000}
+.pay-sec{padding:9px 12px 7px;flex-shrink:0}
+.pay-lbl{font-size:10px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px}
+.pay-btns{display:flex;gap:6px}
+.pbtn{flex:1;padding:9px 4px;border:2px solid var(--border);border-radius:var(--r-md);background:var(--bg);font-family:'Inter',sans-serif;font-size:11px;font-weight:800;color:var(--txt2);cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:3px}
+.pbtn:hover{border-color:var(--yellow)}
+.pbtn.on{border-color:var(--yellow);background:#fef9c3;color:#92400e}
+.gen-btn{margin:4px 12px 12px;width:calc(100% - 24px);background:var(--green);color:#fff;font-family:'Inter',sans-serif;font-size:14px;font-weight:800;border:none;border-radius:var(--r-md);padding:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;flex-shrink:0;transition:opacity .15s}
+.gen-btn:hover{opacity:.9}
+.gen-btn:disabled{opacity:.5;pointer-events:none}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:none;align-items:center;justify-content:center;padding:16px}
+.modal-bg.open{display:flex}
+.rbox{background:#fff;border-radius:16px;width:100%;max-width:370px;max-height:90svh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.rc{padding:18px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#000;line-height:1.8}
+.rl{text-align:center;font-size:17px;font-weight:700;margin-bottom:3px}
+.rs{text-align:center;font-size:11px;color:#555;margin-bottom:2px}
+.rd2{text-align:center;font-size:11px;color:#888;margin-bottom:10px}
+.rdiv{border-top:1.5px dashed #ccc;margin:7px 0}
+.rrow{display:flex;justify-content:space-between;font-size:12px}
+.rrow.b{font-weight:700}
+.rtot{display:flex;justify-content:space-between;font-size:14px;font-weight:800;margin:5px 0}
+.rty{text-align:center;font-size:11px;color:#555;margin-top:10px;line-height:1.6}
+.rmile{text-align:center;background:#fef9c3;padding:5px;border-radius:6px;font-weight:700;margin:7px 0;font-size:12px}
+.ra{display:flex;gap:8px;padding:12px 18px 18px;border-top:1px solid #f0f0f0}
+.rabtn{flex:1;padding:11px;border-radius:10px;font-family:'Inter',sans-serif;font-size:12px;font-weight:800;cursor:pointer;border:none;display:flex;align-items:center;justify-content:center;gap:5px}
+.no-menu{grid-column:1/-1;text-align:center;padding:40px 20px;color:var(--txt3)}
+.no-menu-icon{font-size:40px;display:block;margin-bottom:12px}
+.fb-bar{background:#dbeafe;border:1px solid #93c5fd;border-radius:var(--r-sm);padding:10px 14px;margin-bottom:12px;font-size:12px;color:#1e40af;font-weight:600;display:flex;align-items:center;gap:8px}
+</style>
 </head>
 <body>
 
-<!-- ── TOP BAR: Customer Search ── -->
 <div class="top-bar">
-  <div class="mob-search">
-    <span style="color:var(--txt3);font-size:15px">📱</span>
-    <input
-      class="mob-inp" type="tel" id="mob-inp"
-      maxlength="10" placeholder="Customer mobile number dalein..."
-      inputmode="numeric"
-      oninput="onMobInput()"
-    />
+  <div class="mob-wrap">
+    <span style="color:var(--txt3)">📱</span>
+    <input class="mob-inp" id="mob-inp" type="tel" maxlength="10"
+      placeholder="Customer mobile number..." inputmode="numeric"
+      oninput="onMobInput()"/>
   </div>
-
-  <!-- Customer found pill -->
-  <div class="cust-pill" id="cust-pill">
-    <div class="cp-avatar" id="cp-avatar">A</div>
+  <div class="cpill" id="cpill">
+    <div class="cp-ava" id="cp-ava">A</div>
     <div>
-      <div class="cp-name" id="cp-name">Customer Name</div>
-      <div class="cp-sub"  id="cp-sub">0 visits · 0 pts</div>
+      <div class="cp-nm" id="cp-nm"></div>
+      <div class="cp-sb" id="cp-sb"></div>
     </div>
-    <button class="cp-clear" onclick="clearCustomer()" title="Remove">✕</button>
+    <button class="cp-x" onclick="clearCust()">✕</button>
   </div>
-
-  <!-- Guest mode -->
-  <div class="guest-pill" id="guest-pill">
-    <span style="font-size:16px">👤</span>
-    <span class="gp-lbl">Guest — points/visit count nahi hoga</span>
-  </div>
-
-  <!-- Not registered warning -->
-  <div class="not-found-bar" id="not-found-bar">
-    <span>⚠️</span>
-    <span>Customer registered nahi hai — Guest bill banao ya register karwao.</span>
+  <div class="notfound" id="notfound">
+    <span>⚠️</span><span>Registered nahi — Guest bill ya pehle register karwao</span>
   </div>
 </div>
 
-<!-- ── POS BODY ── -->
-<div class="pos-body">
-
-  <!-- ══ LEFT: MENU ══ -->
+<div class="pos">
   <div class="menu-panel">
-    <!-- Category tabs -->
+    <div id="fb-status"></div>
     <div class="cat-tabs" id="cat-tabs">
       <button class="cat-tab on" onclick="filterCat('')">🌟 Sab</button>
     </div>
-
-    <!-- Menu search -->
-    <div class="menu-search">
+    <div class="msearch">
       <span style="color:var(--txt3)">🔍</span>
-      <input class="menu-search-inp" type="text" id="menu-search"
-        placeholder="Item naam..." oninput="filterMenu()"/>
+      <input id="msearch" type="text" placeholder="Item naam..." oninput="renderMenu()"/>
     </div>
-
-    <!-- Menu grid -->
-    <div class="menu-grid" id="menu-grid">
-      <div style="text-align:center;color:var(--txt3);padding:40px;grid-column:1/-1;font-size:14px;font-weight:600">
-        ⏳ Menu load ho raha hai...
+    <div class="mgrid" id="mgrid">
+      <div class="no-menu">
+        <span class="no-menu-icon">⏳</span>
+        Menu load ho raha hai...
       </div>
     </div>
   </div>
 
-  <!-- ══ RIGHT: CART ══ -->
   <div class="cart-panel">
-
-    <!-- Cart header -->
-    <div class="cart-header">
-      <div class="cart-title">🧾 Cart <span id="cart-count" style="font-size:13px;color:var(--txt3);font-weight:600">(0 items)</span></div>
-      <button class="cart-clear" onclick="clearCart()">Clear All</button>
+    <div class="cart-hdr">
+      <div style="font-size:14px;font-weight:800;color:var(--txt)">
+        🧾 Cart <span id="cart-cnt" style="font-size:12px;color:var(--txt3);font-weight:600">(0)</span>
+      </div>
+      <button style="font-size:12px;font-weight:700;color:var(--red);background:none;border:none;cursor:pointer;font-family:'Inter',sans-serif" onclick="clearCart()">Clear All</button>
     </div>
-
-    <!-- Cart items -->
     <div class="cart-items" id="cart-items">
       <div class="cart-empty" id="cart-empty">
-        <span class="cart-empty-icon">🛒</span>
-        <span class="cart-empty-txt">Menu se items select karo</span>
+        <span style="font-size:36px">🛒</span>
+        <span style="font-size:13px;font-weight:600">Menu se items select karo</span>
       </div>
     </div>
-
-    <!-- Coupons (shown when customer found) -->
-    <div class="coupon-section" id="coupon-section" style="display:none">
+    <div class="coupon-sec" id="coupon-sec">
       <div class="coupon-lbl">Active Coupons</div>
-      <div class="coupon-chips" id="coupon-chips"></div>
+      <div id="coupon-chips"></div>
     </div>
-
-    <!-- Bill summary -->
-    <div class="bill-summary">
-      <div class="bs-row">
-        <span class="bs-lbl">Subtotal</span>
-        <span class="bs-val" id="subtotal">₹0</span>
+    <div class="bill-sum">
+      <div class="bsr"><span class="bsr-l">Subtotal</span><span class="bsr-v" id="subtotal">₹0</span></div>
+      <div class="bsr" id="disc-row" style="display:none">
+        <span class="bsr-l">Discount (<span id="disc-pct">0</span>%)</span>
+        <span class="bsr-v r" id="disc-amt">-₹0</span>
       </div>
-      <div class="bs-row" id="disc-row" style="display:none">
-        <span class="bs-lbl">Discount (<span id="disc-pct">0</span>%)</span>
-        <span class="bs-val r" id="disc-amt">-₹0</span>
-      </div>
-      <div class="bs-row">
-        <span class="bs-lbl">Items</span>
-        <span class="bs-val" id="items-count">0</span>
-      </div>
-      <div class="bs-total">
-        <span class="bs-total-lbl">Total Payable</span>
-        <span class="bs-total-val" id="total-amt">₹0</span>
+      <div class="bsr"><span class="bsr-l">Items</span><span class="bsr-v" id="item-cnt">0</span></div>
+      <div class="bs-tot">
+        <span class="bst-l">Total Payable</span>
+        <span class="bst-v" id="total-amt">₹0</span>
       </div>
     </div>
-
-    <!-- Payment mode -->
-    <div class="payment-section">
-      <div class="payment-lbl">Payment</div>
+    <div class="pay-sec">
+      <div class="pay-lbl">Payment Method</div>
       <div class="pay-btns">
-        <button class="pay-btn on" id="pay-cash" onclick="selPay(this,'cash')">
-          <span class="pb-icon">💵</span>Cash
-        </button>
-        <button class="pay-btn" id="pay-upi" onclick="selPay(this,'upi')">
-          <span class="pb-icon">📲</span>UPI
-        </button>
-        <button class="pay-btn" id="pay-card" onclick="selPay(this,'card')">
-          <span class="pb-icon">💳</span>Card
-        </button>
+        <button class="pbtn on" onclick="selPay(this,'cash')"><span style="font-size:16px">💵</span>Cash</button>
+        <button class="pbtn"    onclick="selPay(this,'upi')"><span style="font-size:16px">📲</span>UPI</button>
+        <button class="pbtn"    onclick="selPay(this,'card')"><span style="font-size:16px">💳</span>Card</button>
       </div>
     </div>
+    <button class="gen-btn" id="gen-btn" onclick="generateBill()">✅ Generate Bill</button>
+  </div>
+</div>
 
-    <!-- Generate bill -->
-    <button class="gen-btn" id="gen-btn" onclick="generateBill()">
-      ✅ Generate Bill
-    </button>
-
-  </div><!-- /cart-panel -->
-</div><!-- /pos-body -->
-
-<!-- ══ RECEIPT MODAL ══ -->
 <div class="modal-bg" id="receipt-modal">
-  <div class="receipt-box">
-    <div class="receipt" id="receipt-content"></div>
-    <div class="receipt-actions">
-      <button class="ra-btn ra-print" onclick="printReceipt()">🖨️ Print</button>
-      <button class="ra-btn ra-wa"    onclick="waReceipt()">📲 WhatsApp</button>
-      <button class="ra-btn ra-new"   onclick="newBill()">➕ New Bill</button>
+  <div class="rbox">
+    <div class="rc" id="rc"></div>
+    <div class="ra">
+      <button class="rabtn" style="background:#1a1a1a;color:#fff" onclick="doPrint()">🖨️ Print</button>
+      <button class="rabtn" style="background:#25d366;color:#fff" onclick="doWA()">📲 WA</button>
+      <button class="rabtn" style="background:var(--yellow);color:#000" onclick="newBill()">➕ New</button>
     </div>
   </div>
 </div>
 
-<script type="module">
-  import { getMenu, saveBill, getUser, getSettings, getShopInfo, validateCoupon } from '../js/admin.js';
-  import { initStock, getAllStock, updateStockItem } from '../js/stock.js';
+<script>
+// ─────────────────────────────────────────────────────────
+//  FIREBASE SETUP — direct SDK import (NO module system)
+//  Works in both direct open and iframe context
+// ─────────────────────────────────────────────────────────
+var DB = null; // Firestore instance — set after init
 
-  // ═══════════════════════════════════════════════════════
-  //  STATE
-  // ═══════════════════════════════════════════════════════
-  let allMenu      = [];
-  let allStock     = [];
-  let cart         = [];       // [{ item, qty, unitPrice, lineTotal }]
-  let customer     = null;     // logged in customer object
-  let selPayMode   = 'cash';
-  let appliedCoupon= null;     // { type, pct, label }
-  let lastBill     = null;     // for receipt
+function initFirebase() {
+  try {
+    var app = firebase.initializeApp({
+      apiKey:            "AIzaSyCErNYguHO8s4m5aeyGRQvM_PWV_9IzJKs",
+      authDomain:        "the-kathi-roll-hub.firebaseapp.com",
+      projectId:         "the-kathi-roll-hub",
+      storageBucket:     "the-kathi-roll-hub.firebasestorage.app",
+      messagingSenderId: "684649816270",
+      appId:             "1:684649816270:web:73dc4606b754702f6a309f"
+    }, "billing-" + Date.now());
+    DB = firebase.firestore(app);
+    showFBStatus(true);
+    console.log("[billing] Firebase OK");
+  } catch(e) {
+    DB = null;
+    showFBStatus(false);
+    console.warn("[billing] Firebase failed:", e.message);
+  }
+}
 
-  // ═══════════════════════════════════════════════════════
-  //  INIT
-  // ═══════════════════════════════════════════════════════
-  async function init() {
-    await initStock();
-    [allMenu, allStock] = await Promise.all([getMenu(), getAllStock()]);
-    buildCatTabs();
-    renderMenu('', '');
+function showFBStatus(ok) {
+  var el = document.getElementById('fb-status');
+  if (!el) return;
+  el.innerHTML = ok
+    ? '<div class="fb-bar">🔥 Firebase connected — data Firestore se aayega</div>'
+    : '<div class="fb-bar" style="background:#fef9c3;border-color:#fde68a;color:#92400e">⚠️ Firebase offline — LocalStorage se kaam chalega</div>';
+  setTimeout(function(){ el.innerHTML = ''; }, 4000);
+}
+
+// ─────────────────────────────────────────────────────────
+//  DATA HELPERS — Firebase first, LS fallback
+// ─────────────────────────────────────────────────────────
+function getMenu(cb) {
+  if (DB) {
+    DB.collection("rollhub_inventory")
+      .orderBy("addedAt", "desc")
+      .get()
+      .then(function(snap) {
+        var items = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+        localStorage.setItem('krh_menu', JSON.stringify(items));
+        cb(items);
+      })
+      .catch(function(e) {
+        console.warn("Firestore menu failed:", e); cb(lsMenu());
+      });
+  } else {
+    cb(lsMenu());
+  }
+}
+
+function lsMenu()  { return JSON.parse(localStorage.getItem('krh_menu')    || '[]'); }
+function lsUsers() { return JSON.parse(localStorage.getItem('krh_users')   || '[]'); }
+function lsBills() { return JSON.parse(localStorage.getItem('krh_bills')   || '[]'); }
+function lsSettings(){ return JSON.parse(localStorage.getItem('krh_settings')|| '{}'); }
+function lsShop()  { return JSON.parse(localStorage.getItem('krh_shop')    || '{}'); }
+function lsStock() { return JSON.parse(localStorage.getItem('krh_stock')   || '[]'); }
+
+function getUser(mob, cb) {
+  if (DB) {
+    DB.collection("rollhub_customers").doc(mob).get()
+      .then(function(d){ cb(d.exists ? d.data() : null); })
+      .catch(function(){ cb(lsUsers().find(function(u){ return u.mobile===mob; }) || null); });
+  } else {
+    cb(lsUsers().find(function(u){ return u.mobile===mob; }) || null);
+  }
+}
+
+function saveBillDB(bill, onDone) {
+  // Always save to LS
+  var bills = lsBills(); bills.unshift(bill);
+  localStorage.setItem('krh_bills', JSON.stringify(bills));
+
+  if (DB) {
+    DB.collection("rollhub_bills").add(bill)
+      .then(function(){ onDone(); })
+      .catch(function(){ onDone(); });
+  } else { onDone(); }
+}
+
+function updateUserDB(mob, updates) {
+  var users = lsUsers();
+  var idx   = users.findIndex(function(u){ return u.mobile===mob; });
+  if (idx !== -1) {
+    Object.assign(users[idx], updates);
+    localStorage.setItem('krh_users', JSON.stringify(users));
+  }
+  if (DB) {
+    DB.collection("rollhub_customers").doc(mob).update(updates)
+      .catch(function(e){ console.warn("user update failed:", e); });
+  }
+}
+
+// ─────────────────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────────────────
+var allMenu = [], cart = [], customer = null,
+    payMode = 'cash', appliedCoupon = null, lastBill = null,
+    curCat = '', mobTimer = null;
+
+// ─────────────────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────────────────
+function init() {
+  initFirebase();
+  loadMenu();
+}
+
+function loadMenu() {
+  document.getElementById('mgrid').innerHTML =
+    '<div class="no-menu"><span class="no-menu-icon">⏳</span>Menu load ho raha hai...</div>';
+
+  getMenu(function(items) {
+    allMenu = items;
+    buildCats();
+    renderMenu();
+  });
+}
+
+// ─────────────────────────────────────────────────────────
+//  CATEGORY TABS
+// ─────────────────────────────────────────────────────────
+function buildCats() {
+  var cats = [];
+  allMenu.forEach(function(i){ if(i.category && cats.indexOf(i.category)===-1) cats.push(i.category); });
+  var html = '<button class="cat-tab on" onclick="filterCat(\'\')">🌟 Sab</button>';
+  cats.forEach(function(c){
+    html += '<button class="cat-tab" onclick="filterCat(\'' + c.replace(/'/g,"\\'") + '\')">' + c + '</button>';
+  });
+  document.getElementById('cat-tabs').innerHTML = html;
+}
+
+window.filterCat = function(cat) {
+  curCat = cat;
+  var tabs = document.querySelectorAll('.cat-tab');
+  tabs.forEach(function(t){ t.classList.toggle('on', t.textContent.trim() === (cat||'🌟 Sab')); });
+  renderMenu();
+};
+
+// ─────────────────────────────────────────────────────────
+//  RENDER MENU GRID
+// ─────────────────────────────────────────────────────────
+function renderMenu() {
+  var q = (document.getElementById('msearch').value || '').toLowerCase();
+  var items = allMenu.filter(function(i) {
+    if (curCat && i.category !== curCat) return false;
+    if (q && i.name.toLowerCase().indexOf(q) === -1) return false;
+    if (i.showOnApp === false) return false;
+    return true;
+  });
+
+  var grid = document.getElementById('mgrid');
+
+  if (!allMenu.length) {
+    grid.innerHTML = '<div class="no-menu"><span class="no-menu-icon">🌯</span><strong style="color:var(--txt);display:block;margin-bottom:6px">Menu mein koi item nahi</strong><span style="font-size:12px">Admin panel mein Menu tab pe jaake items add karo pehle.</span></div>';
+    return;
   }
 
-  init();
-
-  // ═══════════════════════════════════════════════════════
-  //  CATEGORY TABS
-  // ═══════════════════════════════════════════════════════
-  let curCat = '';
-
-  function buildCatTabs() {
-    const cats = ['', ...new Set(allMenu.map(i => i.category).filter(Boolean))];
-    const tabsEl = document.getElementById('cat-tabs');
-    tabsEl.innerHTML = cats.map(c =>
-      `<button class="cat-tab ${c === '' ? 'on' : ''}"
-        onclick="filterCat('${c}')">${c || '🌟 Sab'}</button>`
-    ).join('');
+  if (!items.length) {
+    grid.innerHTML = '<div class="no-menu"><span class="no-menu-icon">🔍</span>Koi item nahi mila</div>';
+    return;
   }
 
-  window.filterCat = function(cat) {
-    curCat = cat;
-    document.querySelectorAll('.cat-tab').forEach(t => {
-      t.classList.toggle('on', (t.textContent.trim() === (cat || '🌟 Sab')));
-    });
-    renderMenu(cat, document.getElementById('menu-search').value);
-  };
+  var html = '';
+  items.forEach(function(item) {
+    var oos  = item.available === false;
+    var disc = item.discount ? Math.round(item.price * item.discount / 100) : 0;
+    var fp   = (item.price || 0) - disc;
+    var dot  = item.type === 'veg' ? 'veg' : 'nv';
+    var id   = String(item.id).replace(/'/g, '');
 
-  window.filterMenu = function() {
-    renderMenu(curCat, document.getElementById('menu-search').value);
-  };
+    html += '<div class="mcard' + (oos ? ' oos' : '') + '" id="mc-' + id + '" onclick="addToCart(\'' + id + '\')">';
+    html += '<span class="mc-dot ' + dot + '"></span>';
+    html += '<div style="font-size:30px;line-height:1">' + (item.emoji || '🌯') + '</div>';
+    html += '<div style="font-size:11px;font-weight:700;color:var(--txt);text-align:center;line-height:1.3">' + item.name + '</div>';
+    html += '<div style="font-size:13px;font-weight:800;color:var(--txt)">₹' + fp + '</div>';
+    if (item.discount) html += '<div style="font-size:10px;font-weight:700;color:#fff;background:var(--red);padding:2px 6px;border-radius:99px">' + item.discount + '% OFF</div>';
+    if (oos) html += '<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.6);color:#fff;font-size:9px;font-weight:700;text-align:center;padding:3px">Out of Stock</div>';
+    html += '</div>';
+  });
+  grid.innerHTML = html;
+}
 
-  // ═══════════════════════════════════════════════════════
-  //  RENDER MENU GRID
-  // ═══════════════════════════════════════════════════════
-  function renderMenu(cat, q) {
-    const search = (q || '').toLowerCase();
-    const items = allMenu.filter(i => {
-      if (cat && i.category !== cat) return false;
-      if (search && !i.name.toLowerCase().includes(search)) return false;
-      if (i.showOnApp === false) return false;
-      return true;
-    });
+// ─────────────────────────────────────────────────────────
+//  CART
+// ─────────────────────────────────────────────────────────
+window.addToCart = function(id) {
+  var item = allMenu.find(function(i){ return String(i.id) === String(id); });
+  if (!item) return;
+  var disc   = item.discount || 0;
+  var uprice = Math.round(item.price - item.price * disc / 100);
+  var exist  = cart.find(function(c){ return String(c.item.id) === String(id); });
+  if (exist) { exist.qty++; exist.lineTotal = exist.qty * uprice; }
+  else { cart.push({ item: item, qty: 1, unitPrice: uprice, lineTotal: uprice }); }
+  var el = document.getElementById('mc-' + id);
+  if (el) { el.classList.add('flash'); setTimeout(function(){ el.classList.remove('flash'); }, 300); }
+  renderCart(); renderSummary();
+};
 
-    const grid = document.getElementById('menu-grid');
-    if (!items.length) {
-      grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--txt3);font-size:14px;font-weight:600">Koi item nahi mila</div>`;
-      return;
-    }
+window.changeQty = function(id, d) {
+  var idx = cart.findIndex(function(c){ return String(c.item.id) === String(id); });
+  if (idx === -1) return;
+  cart[idx].qty = Math.max(0, cart[idx].qty + d);
+  if (cart[idx].qty === 0) cart.splice(idx, 1);
+  else cart[idx].lineTotal = cart[idx].qty * cart[idx].unitPrice;
+  renderCart(); renderSummary();
+};
 
-    grid.innerHTML = items.map(item => {
-      const oos      = item.available === false;
-      const discAmt  = item.discount ? Math.round(item.price * item.discount / 100) : 0;
-      const finalP   = item.price - discAmt;
-      return `
-        <div class="menu-card ${oos ? 'out-of-stock' : ''}"
-          id="mc-${item.id}"
-          onclick="addToCart('${item.id}')"
-          title="${item.name} — ₹${finalP}">
-          <span class="mc-type ${item.type === 'veg' ? 'veg' : 'non-veg'}"></span>
-          <div class="mc-emoji">${item.emoji || '🌯'}</div>
-          <div class="mc-name">${item.name}</div>
-          <div class="mc-price">₹${finalP}</div>
-          ${item.discount ? `<div class="mc-disc">${item.discount}% OFF</div>` : ''}
-          ${oos ? '<div class="mc-oos-badge">Out of Stock</div>' : ''}
-        </div>`;
-    }).join('');
+window.removeItem = function(id) {
+  cart = cart.filter(function(c){ return String(c.item.id) !== String(id); });
+  renderCart(); renderSummary();
+};
+
+window.clearCart = function() {
+  cart = []; appliedCoupon = null;
+  renderCart(); renderSummary();
+  if (customer) renderCoupons();
+};
+
+function renderCart() {
+  var el  = document.getElementById('cart-items');
+  var cnt = 0; cart.forEach(function(c){ cnt += c.qty; });
+  document.getElementById('cart-cnt').textContent = '(' + cnt + ')';
+
+  if (!cart.length) {
+    el.innerHTML = '';
+    var emp = document.getElementById('cart-empty');
+    if (emp) { emp.style.display = 'flex'; el.appendChild(emp); }
+    return;
   }
+  var emp2 = document.getElementById('cart-empty');
+  if (emp2) emp2.style.display = 'none';
 
-  // ═══════════════════════════════════════════════════════
-  //  CART OPERATIONS
-  // ═══════════════════════════════════════════════════════
-  window.addToCart = function(id) {
-    const item = allMenu.find(i => i.id === id);
-    if (!item) return;
-    const disc     = item.discount || 0;
-    const unitPrice= Math.round(item.price - item.price * disc / 100);
-    const existing = cart.find(c => c.item.id === id);
+  var html = '';
+  cart.forEach(function(c) {
+    var id = String(c.item.id).replace(/'/g,'');
+    html += '<div class="ci">';
+    html += '<div style="font-size:20px;flex-shrink:0">' + (c.item.emoji || '🌯') + '</div>';
+    html += '<div class="ci-inf"><div class="ci-nm">' + c.item.name + '</div>';
+    html += '<div class="ci-pr">₹' + c.unitPrice + ' × ' + c.qty + '</div></div>';
+    html += '<div class="qctrl">';
+    html += '<button class="qcb" onclick="changeQty(\'' + id + '\',-1)">−</button>';
+    html += '<span class="qcv">' + c.qty + '</span>';
+    html += '<button class="qcb" onclick="changeQty(\'' + id + '\',1)">+</button>';
+    html += '</div>';
+    html += '<div class="ci-tot">₹' + c.lineTotal + '</div>';
+    html += '<button onclick="removeItem(\'' + id + '\')" style="background:none;border:none;cursor:pointer;color:var(--txt3);font-size:13px;padding:2px">✕</button>';
+    html += '</div>';
+  });
+  el.innerHTML = html;
+}
 
-    if (existing) {
-      existing.qty++;
-      existing.lineTotal = existing.qty * unitPrice;
-    } else {
-      cart.push({ item, qty: 1, unitPrice, lineTotal: unitPrice });
-    }
+function renderSummary() {
+  var sub  = 0; cart.forEach(function(c){ sub += c.lineTotal; });
+  var pct  = appliedCoupon ? (appliedCoupon.pct || 0) : 0;
+  var disc = Math.round(sub * pct / 100);
+  var tot  = sub - disc;
+  document.getElementById('subtotal').textContent  = '₹' + sub;
+  document.getElementById('item-cnt').textContent  = (function(){ var n=0; cart.forEach(function(c){n+=c.qty;}); return n; })() + ' items';
+  document.getElementById('total-amt').textContent = '₹' + tot;
+  var dr = document.getElementById('disc-row');
+  if (pct > 0 && disc > 0) {
+    dr.style.display = 'flex';
+    document.getElementById('disc-pct').textContent = pct;
+    document.getElementById('disc-amt').textContent = '-₹' + disc;
+  } else { dr.style.display = 'none'; }
+}
 
-    // Flash animation
-    const card = document.getElementById('mc-' + id);
-    if (card) {
-      card.classList.add('added');
-      setTimeout(() => card.classList.remove('added'), 350);
-    }
-
-    renderCart();
-    renderSummary();
-  };
-
-  window.changeQty = function(id, delta) {
-    const idx = cart.findIndex(c => c.item.id === id);
-    if (idx === -1) return;
-    cart[idx].qty = Math.max(0, cart[idx].qty + delta);
-    if (cart[idx].qty === 0) cart.splice(idx, 1);
-    else cart[idx].lineTotal = cart[idx].qty * cart[idx].unitPrice;
-    renderCart();
-    renderSummary();
-  };
-
-  window.removeItem = function(id) {
-    cart = cart.filter(c => c.item.id !== id);
-    renderCart();
-    renderSummary();
-  };
-
-  window.clearCart = function() {
-    cart = [];
-    appliedCoupon = null;
-    renderCart();
-    renderSummary();
-    renderCoupons();
-  };
-
-  // ═══════════════════════════════════════════════════════
-  //  RENDER CART
-  // ═══════════════════════════════════════════════════════
-  function renderCart() {
-    const el    = document.getElementById('cart-items');
-    const empty = document.getElementById('cart-empty');
-    const count = cart.reduce((a, c) => a + c.qty, 0);
-    document.getElementById('cart-count').textContent = `(${count} items)`;
-
-    if (!cart.length) {
-      el.innerHTML = '';
-      el.appendChild(empty);
-      empty.style.display = 'flex';
-      return;
-    }
-    empty.style.display = 'none';
-
-    el.innerHTML = cart.map(c => `
-      <div class="cart-item">
-        <div class="ci-emoji">${c.item.emoji || '🌯'}</div>
-        <div class="ci-info">
-          <div class="ci-name">${c.item.name}</div>
-          <div class="ci-price">₹${c.unitPrice} × ${c.qty}</div>
-        </div>
-        <div class="qty-ctrl">
-          <button class="qc-btn" onclick="changeQty('${c.item.id}',-1)">−</button>
-          <span class="qc-val">${c.qty}</span>
-          <button class="qc-btn" onclick="changeQty('${c.item.id}',1)">+</button>
-        </div>
-        <div class="ci-total">₹${c.lineTotal}</div>
-        <button onclick="removeItem('${c.item.id}')"
-          style="background:none;border:none;cursor:pointer;color:var(--txt3);font-size:14px;padding:2px">✕</button>
-      </div>`).join('');
+// ─────────────────────────────────────────────────────────
+//  CUSTOMER SEARCH
+// ─────────────────────────────────────────────────────────
+window.onMobInput = function() {
+  var mob = document.getElementById('mob-inp').value.trim();
+  clearTimeout(mobTimer);
+  document.getElementById('cpill').classList.remove('show');
+  document.getElementById('notfound').classList.remove('show');
+  document.getElementById('coupon-sec').style.display = 'none';
+  if (mob.length === 10 && /^\d{10}$/.test(mob)) {
+    mobTimer = setTimeout(function(){ lookupCust(mob); }, 400);
   }
+};
 
-  // ═══════════════════════════════════════════════════════
-  //  RENDER SUMMARY
-  // ═══════════════════════════════════════════════════════
-  function renderSummary() {
-    const subtotal = cart.reduce((a, c) => a + c.lineTotal, 0);
-    const pct      = appliedCoupon?.pct || 0;
-    const disc     = Math.round(subtotal * pct / 100);
-    const total    = subtotal - disc;
-
-    document.getElementById('subtotal').textContent   = '₹' + subtotal;
-    document.getElementById('items-count').textContent= cart.reduce((a,c)=>a+c.qty,0) + ' items';
-    document.getElementById('total-amt').textContent  = '₹' + total;
-
-    const discRow = document.getElementById('disc-row');
-    if (pct > 0 && disc > 0) {
-      discRow.style.display = 'flex';
-      document.getElementById('disc-pct').textContent = pct;
-      document.getElementById('disc-amt').textContent = '-₹' + disc;
-    } else {
-      discRow.style.display = 'none';
-    }
-  }
-
-  // ═══════════════════════════════════════════════════════
-  //  CUSTOMER SEARCH
-  // ═══════════════════════════════════════════════════════
-  let mobTimer = null;
-
-  window.onMobInput = function() {
-    const mob = document.getElementById('mob-inp').value.trim();
-    clearTimeout(mobTimer);
-    hideCustomerUI();
-
-    if (mob.length === 10 && /^\d{10}$/.test(mob)) {
-      mobTimer = setTimeout(() => lookupCustomer(mob), 400);
-    } else if (mob.length > 0 && mob.length < 10) {
-      // typing
-    }
-  };
-
-  async function lookupCustomer(mob) {
-    const user = await getUser(mob);
+function lookupCust(mob) {
+  getUser(mob, function(user) {
     if (user) {
       customer = user;
-      showCustomerUI(user);
+      document.getElementById('cp-ava').textContent = user.name[0].toUpperCase();
+      document.getElementById('cp-nm').textContent  = user.name;
+      document.getElementById('cp-sb').textContent  = (user.visits||0) + ' visits · ' + (user.points||0) + ' pts';
+      document.getElementById('cpill').classList.add('show');
+      document.getElementById('notfound').classList.remove('show');
+      renderCoupons();
     } else {
       customer = null;
-      document.getElementById('not-found-bar').classList.add('show');
+      document.getElementById('cpill').classList.remove('show');
+      document.getElementById('notfound').classList.add('show');
     }
+  });
+}
+
+window.clearCust = function() {
+  customer = null; appliedCoupon = null;
+  document.getElementById('mob-inp').value = '';
+  document.getElementById('cpill').classList.remove('show');
+  document.getElementById('notfound').classList.remove('show');
+  document.getElementById('coupon-sec').style.display = 'none';
+  renderSummary();
+};
+
+// ─────────────────────────────────────────────────────────
+//  COUPONS
+// ─────────────────────────────────────────────────────────
+function renderCoupons() {
+  if (!customer) return;
+  var s      = lsSettings();
+  var mob    = customer.mobile;
+  var today  = new Date();
+  var dob    = customer.dob ? new Date(customer.dob) : null;
+  var isBday = dob && dob.getDate()===today.getDate() && dob.getMonth()===today.getMonth();
+  var vGoal  = s.defaultVisitThreshold || 5;
+  var vMile  = (customer.visits||0) > 0 && (customer.visits||0) % vGoal === 0;
+  var disc   = s.defaultWelcomeDisc || 10;
+
+  var coupons = [{ type:'welcome', pct: disc, label: '🎟️ Welcome ' + disc + '% OFF' }];
+  if (isBday) coupons.push({ type:'birthday', pct:15, label:'🎂 Birthday 15% OFF' });
+  if (vMile)  coupons.push({ type:'visit',    pct:0,  label:'🔥 Visit Milestone!' });
+  if (customer.specialOffer && customer.specialOffer.active)
+    coupons.push({ type:'special', pct: customer.specialOffer.discount||0, label:'🎁 ' + customer.specialOffer.label });
+
+  document.getElementById('coupon-sec').style.display = 'block';
+  var html = '';
+  coupons.forEach(function(c) {
+    var on = appliedCoupon && appliedCoupon.type === c.type;
+    // Safe: serialize coupon as data attribute, parse on click
+    var dataVal = encodeURIComponent(JSON.stringify(c));
+    html += '<span class="chip' + (on?' on':'') + '" onclick="applyCoupon(decodeURIComponent(\'' + dataVal + '\'))">';
+    html += c.label + (c.pct > 0 ? ' (' + c.pct + '%)' : '');
+    html += '</span>';
+  });
+  document.getElementById('coupon-chips').innerHTML = html;
+}
+
+window.applyCoupon = function(raw) {
+  var c = JSON.parse(raw);
+  appliedCoupon = (appliedCoupon && appliedCoupon.type === c.type) ? null : c;
+  renderCoupons(); renderSummary();
+};
+
+// ─────────────────────────────────────────────────────────
+//  PAYMENT
+// ─────────────────────────────────────────────────────────
+window.selPay = function(el, method) {
+  document.querySelectorAll('.pbtn').forEach(function(b){ b.classList.remove('on'); });
+  el.classList.add('on'); payMode = method;
+};
+
+// ─────────────────────────────────────────────────────────
+//  GENERATE BILL
+// ─────────────────────────────────────────────────────────
+window.generateBill = function() {
+  if (!cart.length) { alert('Cart mein koi item nahi!'); return; }
+  var btn = document.getElementById('gen-btn');
+  btn.disabled = true; btn.textContent = '⏳ Processing...';
+
+  var sub   = 0; cart.forEach(function(c){ sub += c.lineTotal; });
+  var pct   = appliedCoupon ? (appliedCoupon.pct||0) : 0;
+  var disc  = Math.round(sub * pct / 100);
+  var final = sub - disc;
+  var sh    = lsShop();
+  var now   = new Date().toISOString();
+
+  var bill = {
+    id:      String(Date.now()),
+    mobile:  customer ? customer.mobile : 'guest',
+    name:    customer ? customer.name   : 'Guest',
+    items:   cart.map(function(c){ return { name:c.item.name, qty:c.qty, price:c.unitPrice, total:c.lineTotal }; }),
+    amt:     sub, discount:disc, final:final,
+    offer:   appliedCoupon ? appliedCoupon.type : 'none',
+    payment: payMode, time: now
+  };
+
+  // Visit + points
+  var visitResult = null;
+  if (customer) {
+    var s      = lsSettings();
+    var goal   = s.defaultVisitThreshold || 5;
+    var rew    = s.defaultVisitReward    || 'FREE Roll ya Momos';
+    var ptsAdd = s.defaultPerVisitPts    || 5;
+    var newV   = (customer.visits||0) + 1;
+    var newP   = (customer.points||0) + ptsAdd;
+    var newS   = (customer.saved||0) + disc;
+    var updates = { visits:newV, points:newP, saved:newS };
+    updateUserDB(customer.mobile, updates);
+    customer.visits = newV; customer.points = newP; customer.saved = newS;
+    visitResult = { visits:newV, points:newP, milestone: newV % goal === 0, reward:rew };
+    // Update display
+    document.getElementById('cp-sb').textContent = newV + ' visits · ' + newP + ' pts';
   }
 
-  function showCustomerUI(user) {
-    document.getElementById('cust-pill').classList.add('show');
-    document.getElementById('guest-pill').classList.remove('show');
-    document.getElementById('not-found-bar').classList.remove('show');
-    document.getElementById('cp-avatar').textContent = user.name[0].toUpperCase();
-    document.getElementById('cp-name').textContent   = user.name;
-    document.getElementById('cp-sub').textContent    = `${user.visits||0} visits · ${user.points||0} pts`;
-    renderCoupons();
+  // Stock deduction
+  var stock = lsStock();
+  var stockChanged = false;
+  cart.forEach(function(ci) {
+    var nm = ci.item.name.toLowerCase();
+    var si = stock.findIndex(function(s){ return nm.indexOf(s.name.toLowerCase())!==-1 || s.name.toLowerCase().indexOf(nm)!==-1; });
+    if (si !== -1) { stock[si].qty = Math.max(0,(stock[si].qty||0)-ci.qty); stockChanged=true; }
+  });
+  if (stockChanged) localStorage.setItem('krh_stock', JSON.stringify(stock));
+
+  // Save bill
+  saveBillDB(bill, function() {
+    lastBill = { bill:bill, visitResult:visitResult, sh:sh, pct:pct };
+    showReceipt();
+    btn.disabled = false; btn.textContent = '✅ Generate Bill';
+  });
+};
+
+// ─────────────────────────────────────────────────────────
+//  RECEIPT — No backticks, no template literals, no quotes issues
+// ─────────────────────────────────────────────────────────
+function showReceipt() {
+  var b  = lastBill.bill;
+  var sh = lastBill.sh;
+  var vr = lastBill.visitResult;
+  var now = new Date();
+  var ts  = now.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})
+          + ' ' + now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+
+  var lines = '';
+  b.items.forEach(function(i) {
+    lines += '<div class="rrow"><span>' + i.name + ' x' + i.qty + '</span><span>Rs ' + i.total + '</span></div>';
+  });
+
+  var mile = '';
+  if (vr && vr.milestone) {
+    mile = '<div class="rmile">Visit ' + vr.visits + ' — ' + vr.reward + ' eligible!</div>';
   }
 
-  function hideCustomerUI() {
-    document.getElementById('cust-pill').classList.remove('show');
-    document.getElementById('guest-pill').classList.remove('show');
-    document.getElementById('not-found-bar').classList.remove('show');
-    document.getElementById('coupon-section').style.display = 'none';
-    appliedCoupon = null;
-    renderSummary();
+  var html = '';
+  html += '<div class="rl">🌯 ' + (sh.name || 'Kathi Roll Hub') + '</div>';
+  html += '<div class="rs">' + (sh.loc || '') + '</div>';
+  html += '<div class="rd2">' + ts + '</div>';
+  html += '<div class="rdiv"></div>';
+  html += '<div class="rrow b"><span>Customer</span><span>' + b.name + '</span></div>';
+  if (b.mobile !== 'guest') { html += '<div class="rrow"><span>Mobile</span><span>' + b.mobile + '</span></div>'; }
+  html += '<div class="rdiv"></div>';
+  html += lines;
+  html += '<div class="rdiv"></div>';
+  html += '<div class="rrow"><span>Subtotal</span><span>Rs ' + b.amt + '</span></div>';
+  if (b.discount > 0) { html += '<div class="rrow" style="color:#dc2626"><span>Discount (' + (lastBill.pct||0) + '%)</span><span>-Rs ' + b.discount + '</span></div>'; }
+  html += '<div class="rdiv"></div>';
+  html += '<div class="rtot"><span>TOTAL</span><span>Rs ' + b.final + '</span></div>';
+  html += '<div class="rrow"><span>Payment</span><span>' + (b.payment||'cash').toUpperCase() + '</span></div>';
+  if (vr) {
+    html += '<div class="rdiv"></div>';
+    html += '<div class="rrow"><span>Points</span><span>' + vr.points + '</span></div>';
+    html += '<div class="rrow"><span>Visit No</span><span>' + vr.visits + '</span></div>';
   }
+  html += mile;
+  html += '<div class="rdiv"></div>';
+  html += '<div class="rty">Dhanyawaad! Dobara aana<br>' + (sh.instagram || '') + '</div>';
 
-  window.clearCustomer = function() {
-    customer = null;
-    document.getElementById('mob-inp').value = '';
-    hideCustomerUI();
-    appliedCoupon = null;
-    renderSummary();
-  };
+  document.getElementById('rc').innerHTML = html;
+  document.getElementById('receipt-modal').classList.add('open');
+}
 
-  // ═══════════════════════════════════════════════════════
-  //  COUPONS
-  // ═══════════════════════════════════════════════════════
-  function renderCoupons() {
-    if (!customer) return;
-    const s       = getSettings();
-    const mob     = customer.mobile;
-    const today   = new Date();
-    const dob     = customer.dob ? new Date(customer.dob) : null;
-    const isBday  = dob && dob.getDate()===today.getDate() && dob.getMonth()===today.getMonth();
-    const vGoal   = s.defaultVisitThreshold || 5;
-    const vMile   = (customer.visits||0) % vGoal === 0 && (customer.visits||0) > 0;
+// ─────────────────────────────────────────────────────────
+//  PRINT — Uses blob URL to avoid all quote issues
+// ─────────────────────────────────────────────────────────
+window.doPrint = function() {
+  if (!lastBill) return;
+  var inner = document.getElementById('rc').innerHTML;
+  var css = 'body{font-family:monospace;font-size:12px;padding:14px;max-width:280px;margin:0 auto;line-height:1.8;color:#000}.rl{text-align:center;font-size:16px;font-weight:700;margin-bottom:3px}.rs,.rd2{text-align:center;font-size:10px;color:#555;margin-bottom:2px}.rdiv{border-top:1.5px dashed #ccc;margin:6px 0}.rrow{display:flex;justify-content:space-between}.rrow.b{font-weight:700}.rtot{display:flex;justify-content:space-between;font-size:13px;font-weight:800;margin:5px 0}.rty{text-align:center;font-size:10px;color:#555;margin-top:10px}.rmile{text-align:center;background:#fef9c3;padding:4px;border-radius:4px;font-weight:700;margin:5px 0}';
+  var full = '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>' + css + '</style></head><body>' + inner + '</body></html>';
+  var blob = new Blob([full], { type: 'text/html' });
+  var url  = URL.createObjectURL(blob);
+  var win  = window.open(url, '_blank');
+  if (win) { win.onload = function(){ win.print(); }; }
+};
 
-    const coupons = [];
-    coupons.push({ type:'welcome', pct: s.defaultWelcomeDisc||10, label:`🎟️ Welcome ${s.defaultWelcomeDisc||10}% OFF`, code:`ROLL${mob.slice(-4).toUpperCase()}` });
-    if (isBday) coupons.push({ type:'birthday', pct:15, label:'🎂 Birthday 15% OFF', code:`BDAY${mob.slice(-4).toUpperCase()}${today.getFullYear()}` });
-    if (vMile)  coupons.push({ type:'visit', pct:0, label:`🔥 Visit Milestone!`, code:`VIS${mob.slice(-4).toUpperCase()}` });
-    if (customer.specialOffer?.active) {
-      coupons.push({ type:'special', pct:customer.specialOffer.discount||0, label:`🎁 ${customer.specialOffer.label}`, code:`SPEC${mob.slice(-4).toUpperCase()}` });
-    }
+// ─────────────────────────────────────────────────────────
+//  WHATSAPP
+// ─────────────────────────────────────────────────────────
+window.doWA = function() {
+  if (!lastBill) return;
+  var b  = lastBill.bill;
+  var sh = lastBill.sh;
+  var vr = lastBill.visitResult;
+  var lines = b.items.map(function(i){ return i.name + ' x' + i.qty + ' = Rs ' + i.total; }).join('\n');
+  var msg = (sh.name || 'Kathi Roll Hub') + ' - Bill\n';
+  msg += '----\n';
+  msg += 'Customer: ' + b.name + '\n';
+  msg += '----\n';
+  msg += lines + '\n';
+  msg += '----\n';
+  if (b.discount > 0) msg += 'Discount: -Rs ' + b.discount + '\n';
+  msg += 'Total: Rs ' + b.final + '\n';
+  msg += 'Payment: ' + (b.payment||'cash').toUpperCase() + '\n';
+  if (vr) { msg += '----\nPoints: ' + vr.points + '\nVisit: ' + vr.visits + '\n'; }
+  msg += 'Dhanyawaad!';
+  var mob = b.mobile !== 'guest' ? b.mobile : (sh.waNumber || '');
+  window.open('https://wa.me/' + mob + '?text=' + encodeURIComponent(msg), '_blank');
+};
 
-    const sec   = document.getElementById('coupon-section');
-    const chips = document.getElementById('coupon-chips');
-    sec.style.display = 'block';
+// ─────────────────────────────────────────────────────────
+//  NEW BILL
+// ─────────────────────────────────────────────────────────
+window.newBill = function() {
+  cart = []; appliedCoupon = null; customer = null; lastBill = null;
+  document.getElementById('mob-inp').value = '';
+  document.getElementById('receipt-modal').classList.remove('open');
+  document.getElementById('cpill').classList.remove('show');
+  document.getElementById('notfound').classList.remove('show');
+  document.getElementById('coupon-sec').style.display = 'none';
+  renderCart(); renderSummary();
+  loadMenu();
+};
 
-    chips.innerHTML = coupons.map(c =>
-      `<div class="coupon-chip ${appliedCoupon?.type===c.type ? 'applied' : ''}"
-        onclick="applyCoupon(${JSON.stringify(c).replace(/"/g,'&quot;')})">
-        ${c.label} ${c.pct>0 ? '(' + c.pct + '% off)' : ''}
-      </div>`
-    ).join('');
-  }
-
-  window.applyCoupon = function(c) {
-    if (appliedCoupon?.type === c.type) {
-      appliedCoupon = null;   // toggle off
-    } else {
-      appliedCoupon = c;
-    }
-    renderCoupons();
-    renderSummary();
-  };
-
-  // ═══════════════════════════════════════════════════════
-  //  PAYMENT
-  // ═══════════════════════════════════════════════════════
-  window.selPay = function(el, method) {
-    document.querySelectorAll('.pay-btn').forEach(b => b.classList.remove('on'));
-    el.classList.add('on');
-    selPayMode = method;
-  };
-
-  // ═══════════════════════════════════════════════════════
-  //  GENERATE BILL
-  // ═══════════════════════════════════════════════════════
-  window.generateBill = async function() {
-    if (!cart.length) {
-      alert('Cart mein koi item nahi!'); return;
-    }
-
-    const btn = document.getElementById('gen-btn');
-    btn.disabled = true; btn.textContent = '⏳ Processing...';
-
-    try {
-      const subtotal = cart.reduce((a, c) => a + c.lineTotal, 0);
-      const pct      = appliedCoupon?.pct || 0;
-      const disc     = Math.round(subtotal * pct / 100);
-      const final    = subtotal - disc;
-      const sh       = getShopInfo();
-
-      const billData = {
-        mobile:   customer?.mobile  || 'guest',
-        name:     customer?.name    || 'Guest',
-        items:    cart.map(c => ({ name: c.item.name, qty: c.qty, price: c.unitPrice, total: c.lineTotal })),
-        amt:      subtotal,
-        discount: disc,
-        final,
-        offer:    appliedCoupon?.type || 'none',
-        payment:  selPayMode,
-        shopId:   sh.id || 'kathi-roll-hub',
-      };
-
-      // ── Save bill + add visit (if registered customer) ──
-      const result = customer
-        ? await saveBill(billData)
-        : { success: true, bill: { ...billData, id: Date.now().toString(), time: new Date().toISOString() }, visitResult: null };
-
-      // ── Stock deduction (if possible) ──────────────────
-      if (allStock.length) {
-        await deductStock(cart);
-      }
-
-      lastBill = {
-        ...result.bill,
-        visitResult: result.visitResult,
-        customer,
-        sh,
-        pct,
-      };
-
-      showReceipt(lastBill);
-
-    } catch (e) {
-      alert('Bill generate nahi hua: ' + e.message);
-      console.error(e);
-    } finally {
-      btn.disabled = false; btn.textContent = '✅ Generate Bill';
-    }
-  };
-
-  // ── Stock deduction ────────────────────────────────────
-  async function deductStock(cartItems) {
-    for (const ci of cartItems) {
-      const name  = ci.item.name.toLowerCase();
-      const stock = allStock.find(s =>
-        name.includes(s.name.toLowerCase()) ||
-        s.name.toLowerCase().includes(name)
-      );
-      if (!stock) continue;
-      const newQty = Math.max(0, (stock.qty || 0) - ci.qty);
-      stock.qty = newQty;
-      try {
-        await updateStockItem({ ...stock, qty: newQty });
-      } catch (e) {
-        console.warn('Stock deduct failed for', stock.name, e.message);
-      }
-    }
-  }
-
-  // ═══════════════════════════════════════════════════════
-  //  RECEIPT
-  // ═══════════════════════════════════════════════════════
-  function showReceipt(bill) {
-    const sh      = bill.sh || {};
-    const now     = new Date();
-    const timeStr = now.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})
-                  + ' ' + now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
-
-    let lines = bill.items.map(i =>
-      `<div class="receipt-row">
-        <span>${i.name} ×${i.qty}</span>
-        <span>₹${i.total}</span>
-      </div>`
-    ).join('');
-
-    const milestone = bill.visitResult?.milestone;
-    const mileMsg   = milestone
-      ? `<div style="text-align:center;background:#fef9c3;padding:6px;border-radius:6px;font-weight:700;margin:8px 0">
-           🎉 Visit ${bill.visitResult.visits} — FREE item eligible!
-         </div>`
-      : '';
-
-    const html = `
-      <div class="receipt-logo">🌯 ${sh.name || 'Kathi Roll Hub'}</div>
-      <div class="receipt-sub">${sh.loc || 'Murlipura, Jaipur'}</div>
-      <div class="receipt-date">${timeStr}</div>
-      <div class="receipt-div"></div>
-
-      <div class="receipt-row bold">
-        <span>Customer</span><span>${bill.name}</span>
-      </div>
-      ${bill.mobile !== 'guest' ? `<div class="receipt-row"><span>Mobile</span><span>${bill.mobile}</span></div>` : ''}
-      <div class="receipt-div"></div>
-
-      ${lines}
-      <div class="receipt-div"></div>
-
-      <div class="receipt-row"><span>Subtotal</span><span>₹${bill.amt}</span></div>
-      ${bill.discount > 0
-        ? `<div class="receipt-row" style="color:#dc2626"><span>Discount (${bill.pct||0}%)</span><span>-₹${bill.discount}</span></div>`
-        : ''}
-      <div class="receipt-div"></div>
-      <div class="receipt-total"><span>TOTAL</span><span>₹${bill.final}</span></div>
-      <div class="receipt-row"><span>Payment</span><span>${(bill.payment||'cash').toUpperCase()}</span></div>
-
-      ${bill.visitResult ? `
-      <div class="receipt-div"></div>
-      <div class="receipt-row"><span>⭐ Points Balance</span><span>${bill.visitResult.points} pts</span></div>
-      <div class="receipt-row"><span>🔥 Visit #</span><span>${bill.visitResult.visits}</span></div>` : ''}
-
-      ${mileMsg}
-
-      <div class="receipt-div"></div>
-      <div class="receipt-thanks">
-        Dhanyawaad! Dobara aana 🙏<br/>
-        ${sh.instagram ? sh.instagram : ''}
-      </div>`;
-
-    document.getElementById('receipt-content').innerHTML = html;
-    document.getElementById('receipt-modal').classList.add('open');
-  }
-
-  window.printReceipt = function() {
-    const content = document.getElementById('receipt-content').innerHTML;
-    const win = window.open('', '_blank', 'width=400,height=600');
-    win.document.write(`
-      <html><head><title>Bill</title>
-      <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet"/>
-      <style>
-        body{font-family:'JetBrains Mono',monospace;font-size:12px;padding:16px;max-width:300px;margin:0 auto;line-height:1.8;color:#000}
-        .receipt-logo{text-align:center;font-size:18px;font-weight:700;margin-bottom:4px}
-        .receipt-sub,.receipt-date{text-align:center;font-size:11px;color:#555;margin-bottom:2px}
-        .receipt-div{border-top:1.5px dashed #ccc;margin:8px 0}
-        .receipt-row{display:flex;justify-content:space-between}
-        .receipt-row.bold{font-weight:700}
-        .receipt-total{display:flex;justify-content:space-between;font-size:15px;font-weight:800;margin:6px 0}
-        .receipt-thanks{text-align:center;font-size:11px;color:#555;margin-top:12px;line-height:1.6}
-      </style></head>
-      <body>${content}</body></html>`);
-    win.document.close();
-    win.print();
-  };
-
-  window.waReceipt = function() {
-    if (!lastBill) return;
-    const sh  = lastBill.sh || {};
-    const itm = lastBill.items.map(i => `  ${i.name} ×${i.qty} = ₹${i.total}`).join('\n');
-    const msg = encodeURIComponent(
-      `🧾 *${sh.name || 'Kathi Roll Hub'} — Bill*\n` +
-      `────────────────\n` +
-      `👤 ${lastBill.name}\n` +
-      `📅 ${new Date().toLocaleString('en-IN')}\n` +
-      `────────────────\n` +
-      itm + '\n' +
-      `────────────────\n` +
-      (lastBill.discount > 0 ? `🎁 Discount: -₹${lastBill.discount}\n` : '') +
-      `✅ *Total: ₹${lastBill.final}*\n` +
-      `💳 ${(lastBill.payment||'cash').toUpperCase()}\n` +
-      `────────────────\n` +
-      (lastBill.visitResult ? `⭐ Points: ${lastBill.visitResult.points}\n🔥 Visit #${lastBill.visitResult.visits}\n` : '') +
-      `Dhanyawaad! Dobara aana 🙏`
-    );
-    const mob = lastBill.mobile !== 'guest' ? lastBill.mobile : (sh.waNumber || '');
-    window.open(`https://wa.me/${mob}?text=${msg}`, '_blank');
-  };
-
-  window.newBill = function() {
-    cart = []; appliedCoupon = null; customer = null;
-    document.getElementById('mob-inp').value = '';
-    document.getElementById('receipt-modal').classList.remove('open');
-    hideCustomerUI();
-    renderCart();
-    renderSummary();
-    lastBill = null;
-  };
+// init() called from HTML after CDN scripts load
+</script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"
+  onerror="window._fbFailed=true"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"
+  onerror="window._fbFailed=true"></script>
+<script>
+  if (window._fbFailed) { window.DB = null; }
+  init();
 </script>
 </body>
 </html>
